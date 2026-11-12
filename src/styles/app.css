@@ -1,0 +1,62 @@
+/**app.wxss —— krstuast 可爱设计系统（全局）**/
+
+/* 糖果色系 CSS 变量 */
+page {
+  --candy-pink: #ffeef4;
+  --candy-mint: #dff6ec;
+  --candy-butter: #fff3ce;
+  --candy-lavender: #eae4ff;
+  --candy-peach: #ffe1d6;
+  --candy-text: #1f1d24;
+  --candy-mute: #7a7383;
+  --candy-accent: #d63a73;
+  --candy-accent-deep: #d63a73;
+
+  /* 页面渐变底（iOS/Android 通用，rpx 自适应） */
+  background: #f6f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  color: #1f1d24;
+  font-size: 28rpx;
+}
+
+/* 通用按钮复位（style v2 默认样式覆盖） */
+button {
+  background: initial;
+  padding: 0;
+  margin: 0;
+  line-height: inherit;
+}
+button:focus {
+  outline: 0;
+}
+button::after {
+  border: none;
+}
+
+/* 可爱动效 */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12rpx);
+  }
+}
+
+/* 通用主按钮（渐变粉胶囊） */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  border-radius: 999rpx;
+  background: #d63a73;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 24rpx rgba(31, 29, 36, 0.08);
+}
+.btn-primary:active {
+  opacity: 0.85;
+}

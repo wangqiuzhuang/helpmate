@@ -1,0 +1,9 @@
+{
+  "name": "krstuast",
+  "version": "1.0.0",
+  "description": "krstuast 业务云函数：订单（帮取帮送等全部功能统一订单模型）+ 用户统计 + 互评",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}

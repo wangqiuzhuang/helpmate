@@ -1,0 +1,10 @@
+{
+  "description": "微信开发者工具直接导入本目录即可:小程序代码来自 uni-app 编译产物,云函数在 cloudfunctions/",
+  "miniprogramRoot": "dist/build/mp-weixin/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "compileType": "miniprogram",
+  "appid": "wxb602f439c3941363",
+  "projectname": "krstuast-uniapp",
+  "setting": { "urlCheck": true, "es6": true, "postcss": true, "minified": true },
+  "libVersion": "3.15.1"
+}

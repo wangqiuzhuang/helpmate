@@ -1,0 +1,44 @@
+# krstuast 后端:MongoDB + Node API(与服务器上其他服务隔离:独立网络、独立目录、只监听本机端口)
+name: krstuast
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: krstuast
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    command: ["--wiredTigerCacheSizeGB", "0.5"]   # 限制缓存,避免挤占服务器上其他服务的内存
+    volumes:
+      - /opt/krstuast/mongo:/data/db
+    networks: [krnet]                               # 不映射端口,外网无法访问数据库
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://krstuast:${MONGO_PASSWORD}@mongo:27017/?authSource=admin
+      MONGO_DB: krstuast
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8095:8095"         # 默认只给本机 Nginx 用;IP 直连测试时 BIND_ADDR=0.0.0.0
+    volumes:
+      - /opt/krstuast/uploads:/data/uploads
+    depends_on: [mongo]
+    networks: [krnet]
+  # 数据库可视化(可选,默认不启动):docker compose --profile tools up -d mongo-express
+  # 只监听服务器本机 8096,外网访问不到;本地用 SSH 隧道打开 http://localhost:8096
+  mongo-express:
+    image: mongo-express:1
+    profiles: ["tools"]
+    restart: "no"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://krstuast:${MONGO_PASSWORD}@mongo:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD:-change-me}
+    ports:
+      - "127.0.0.1:8096:8081"
+    depends_on: [mongo]
+    networks: [krnet]
+networks:
+  krnet: {}

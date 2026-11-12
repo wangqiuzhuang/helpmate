@@ -1,0 +1,17 @@
+node_modules/
+unpackage/
+dist/
+.DS_Store
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+*.jks
+project.private.config.json
+uploads/
+backup/
+*.tgz
+*.zip
+*.bak*
+*.bak*

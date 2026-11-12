@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>HelpMate 管理后台</title>
+<link rel="stylesheet" href="vendor/element-plus.css">
+<style>
+  :root { --el-color-primary: #d63a73; --el-color-primary-light-3: #e2759d; --el-color-primary-light-5: #eb9db9; --el-color-primary-light-7: #f3c4d5; --el-color-primary-light-8: #f7d8e3; --el-color-primary-light-9: #fbebf1; --el-color-primary-dark-2: #ab2e5c; --brand: #d63a73; --ink: #1f1d24; --muted: #6e6878; --bg: #f6f5f7; --line: #ebe7ee; }
+  * { box-sizing: border-box; }
+  html, body, #app { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; font-size: 14px; }
+  [v-cloak] { display: none; }
+  .el-button--primary { --el-button-bg-color: var(--brand); --el-button-border-color: var(--brand); --el-button-hover-bg-color: #e05a8a; --el-button-hover-border-color: #e05a8a; --el-button-active-bg-color: #b52f61; }
+  .login { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .login-card { width: 360px; max-width: 100%; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(31,29,36,.08); }
+  .login-card h1 { margin: 0 0 4px; font-size: 22px; }
+  .login-card p { margin: 0 0 24px; color: var(--muted); }
+  .layout { display: flex; height: 100%; }
+  .aside { width: 200px; flex: 0 0 200px; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+  .brand { padding: 18px 20px; font-weight: 700; font-size: 16px; border-bottom: 1px solid var(--line); }
+  .brand small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .aside .el-menu { border-right: 0; flex: 1; }
+  .el-menu-item.is-active { color: var(--brand); background: #fff3f7; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: #fff; border-bottom: 1px solid var(--line); }
+  .topbar h2 { margin: 0; font-size: 17px; }
+  .content { flex: 1; overflow: auto; padding: 20px 24px 40px; }
+  .panel { background: #fff; border-radius: 12px; padding: 18px 20px; border: 1px solid var(--line); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .stat .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .l { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .stat.warn .n { color: var(--brand); }
+  .stat.click { cursor: pointer; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding-top: 10px; }
+  .bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; min-width: 0; }
+  .bar i { display: block; width: 100%; max-width: 26px; background: var(--brand); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .bar span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .bar b { font-size: 11px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .ptitle { font-weight: 700; margin: 0 0 10px; font-size: 15px; }
+  .rank { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .rank:last-child { border-bottom: 0; }
+  .muted { color: var(--muted); }
+  .snap { white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow: auto; font-size: 13px; }
+  .thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .thumbs img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+  .pager { margin-top: 14px; display: flex; justify-content: flex-end; }
+  .hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+  .banner-img { width: 120px; height: 48px; object-fit: cover; border-radius: 6px; }
+  @media (max-width: 760px) {
+    .aside { position: fixed; z-index: 20; height: 100%; transform: translateX(-100%); transition: transform .2s; }
+    .aside.open { transform: none; box-shadow: 0 0 30px rgba(0,0,0,.2); }
+    .content { padding: 14px; }
+    .menu-btn { display: inline-flex !important; }
+  }
+  .menu-btn { display: none; margin-right: 10px; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!-- 登录 -->
+  <div v-if="!token" class="login">
+    <div class="login-card">
+      <h1>HelpMate 管理后台</h1>
+      <p>请输入账号、密码和验证器里的 6 位动态码</p>
+      <el-form @submit.prevent="login" label-position="top">
+        <el-form-item label="用户名"><el-input id="lg-user" v-model="lf.username" autocomplete="username"></el-input></el-form-item>
+        <el-form-item label="密码"><el-input id="lg-pass" v-model="lf.password" type="password" show-password autocomplete="current-password"></el-input></el-form-item>
+        <el-form-item label="动态码"><el-input id="lg-code" v-model="lf.code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" @keyup.enter="login"></el-input></el-form-item>
+        <el-button type="primary" style="width:100%" :loading="busy" @click="login">登录</el-button>
+      </el-form>
+    </div>
+  </div>
+
+  <div v-else class="layout">
+    <aside :class="['aside', menuOpen ? 'open' : '']">
+      <div class="brand">HelpMate<small>{{ me }} · {{ isSuper ? '超级管理员' : '学校管理员' }}</small></div>
+      <el-menu :default-active="page" @select="go">
+        <el-menu-item index="dashboard">数据看板</el-menu-item>
+        <el-menu-item index="reports">举报处理 <el-badge v-if="totals.pendingReports" :value="totals.pendingReports" style="margin-left:8px"></el-badge></el-menu-item>
+        <el-menu-item index="content">内容管理</el-menu-item>
+        <el-menu-item index="users">用户管理</el-menu-item>
+        <el-menu-item index="riders">接单员审核</el-menu-item>
+        <el-menu-item index="schoolChanges">换校审核</el-menu-item>
+        <el-menu-item index="deals" v-if="isSuper">专属折扣</el-menu-item>
+        <el-menu-item index="merchants" v-if="isSuper">商家推荐</el-menu-item>
+        <el-menu-item index="feedback" v-if="isSuper">意见反馈 <el-badge v-if="totals.pendingFeedback" :value="totals.pendingFeedback" type="info" style="margin-left:8px"></el-badge></el-menu-item>
+        <el-menu-item index="schools" v-if="isSuper">学校申请 <el-badge v-if="totals.pendingSchools" :value="totals.pendingSchools" type="info" style="margin-left:8px"></el-badge></el-menu-item>
+        <template v-if="isSuper">
+          <el-menu-item index="sensitive">敏感词</el-menu-item>
+          <el-menu-item index="announcements">公告与横幅</el-menu-item>
+          <el-menu-item index="tools">工具箱</el-menu-item>
+          <el-menu-item index="groups">校园群</el-menu-item>
+          <el-menu-item index="version">版本管理</el-menu-item>
+          <el-menu-item index="settings">系统设置</el-menu-item>
+          <el-menu-item index="admins">管理员</el-menu-item>
+        </template>
+        <el-menu-item index="logs">{{ isSuper ? '操作日志' : '我的操作记录' }}</el-menu-item>
+      </el-menu>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center"><el-button class="menu-btn" size="small" @click="menuOpen = !menuOpen">菜单</el-button><h2>{{ titles[page] }}</h2></div>
+        <div><span class="muted" v-if="!isSuper" style="margin-right:12px">负责:{{ mySchools.map((x) => x.name).join('、') }}</span><el-button size="small" @click="pw.show = true">修改密码</el-button><el-button size="small" @click="logout">退出登录</el-button></div>
+      </div>
+      <div class="content" @click="menuOpen = false">
+
+        <!-- 数据看板 -->
+        <template v-if="page === 'dashboard'">
+          <div class="stats">
+            <div class="stat"><div class="n">{{ totals.users }}</div><div class="l">{{ isSuper ? '用户总数(App ' + totals.appAccounts + ')' : '本校用户' }}</div></div>
+            <div class="stat"><div class="n">{{ totals.newToday }}</div><div class="l">今日新增</div></div>
+            <div class="stat"><div class="n">{{ totals.new7 }}</div><div class="l">近 7 天新增</div></div>
+            <div class="stat"><div class="n">{{ totals.posts }} / {{ totals.orders }}</div><div class="l">帖子 / 订单</div></div>
+            <div class="stat"><div class="n">{{ totals.comments }}</div><div class="l">评论</div></div>
+            <div class="stat" v-if="isSuper"><div class="n">{{ totals.translateToday }}</div><div class="l">今日翻译次数</div></div>
+            <div :class="['stat', 'click', totals.pendingReports ? 'warn' : '']" @click="go('reports')"><div class="n">{{ totals.pendingReports }}</div><div class="l">待处理举报</div></div>
+            <div class="stat click" v-if="isSuper" @click="go('feedback')"><div class="n">{{ totals.pendingFeedback }}</div><div class="l">未处理反馈</div></div>
+            <div class="stat click" v-if="isSuper" @click="go('schools')"><div class="n">{{ totals.pendingSchools }}</div><div class="l">待审核学校</div></div>
+            <div class="stat"><div class="n">{{ totals.banned }}</div><div class="l">封禁中的账号</div></div>
+          </div>
+          <div class="grid2">
+            <div class="panel" v-for="k in ['users','posts','orders']" :key="k">
+              <p class="ptitle">近 14 天{{ { users: '新用户', posts: '新帖子', orders: '新订单' }[k] }}</p>
+              <div class="chart">
+                <div class="bar" v-for="(v, i) in series[k]" :key="i" :title="series.labels[i] + ': ' + v">
+                  <b>{{ v || '' }}</b><i :style="{ height: barH(v, series[k]) }"></i><span>{{ i % 2 === 0 ? series.labels[i] : '' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <p class="ptitle">{{ isSuper ? '用户最多的学校' : '各校用户数' }}</p>
+              <div class="rank" v-for="s in topSchools" :key="s.schoolId"><span>{{ s.name }}</span><b>{{ s.n }}</b></div>
+              <p class="ptitle" style="margin-top:16px" v-if="isSuper">按国家</p>
+              <div v-if="isSuper" class="rank" v-for="c in byCountry" :key="c.country"><span>{{ { kr: '韩国', cn: '中国', '': '未选学校', unknown: '未选学校' }[c.country] || c.country }}</span><b>{{ c.n }}</b></div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 举报处理 -->
+        <div v-if="page === 'reports'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="rp.status" @change="loadReports(0)">
+              <el-radio-button value="pending">待处理</el-radio-button>
+              <el-radio-button value="resolved">已处理</el-radio-button>
+              <el-radio-button value="dismissed">已驳回</el-radio-button>
+              <el-radio-button value="all">全部</el-radio-button>
+            </el-radio-group>
+            <el-select v-model="rp.schoolId" filterable remote clearable :remote-method="searchSchools" :loading="schLoading" placeholder="全部学校" style="width:180px" @change="loadReports(0)" @visible-change="(v) => v && searchSchools('')"><el-option v-for="o in schoolOpts" :key="o.id" :label="o.name" :value="o.id"></el-option></el-select>
+          </div>
+          <el-table :data="rp.list" v-loading="loading" empty-text="没有举报">
+            <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="对象" width="110"><template #default="{ row }">{{ targetLabels[row.targetType] }}<div class="muted" v-if="row.timesReported > 1">被举报 {{ row.timesReported }} 次</div></template></el-table-column>
+            <el-table-column label="原因" width="120"><template #default="{ row }"><el-tag type="danger" effect="plain">{{ reasonLabels[row.reason] || row.reason }}</el-tag><div class="muted" v-if="row.detail">{{ row.detail }}</div></template></el-table-column>
+            <el-table-column label="被举报内容" min-width="260"><template #default="{ row }"><div class="snap">{{ row.snapshot }}</div></template></el-table-column>
+            <el-table-column label="发布人" width="130"><template #default="{ row }"><a href="#" @click.prevent="openUser(row.ownerId)">{{ row.owner.nickname || row.ownerId }}</a><div class="muted">{{ row.owner.uid }}</div></template></el-table-column>
+            <el-table-column label="举报人" width="110"><template #default="{ row }">{{ row.reporter.nickname || '-' }}</template></el-table-column>
+            <el-table-column label="处理" width="250" fixed="right">
+              <template #default="{ row }">
+                <template v-if="row.status === 'pending'">
+                  <el-button size="small" @click="resolve(row, 'dismiss')">驳回</el-button>
+                  <el-button size="small" v-if="row.targetType !== 'user'" @click="resolve(row, 'hide')">隐藏</el-button>
+                  <el-button size="small" type="danger" plain v-if="row.targetType !== 'user'" @click="resolve(row, 'delete')">删除</el-button>
+                  <el-button size="small" type="danger" @click="openBan(row.ownerId, row)">封号</el-button>
+                </template>
+                <span v-else class="muted">{{ { dismiss: '已驳回', hide: '已隐藏', delete: '已删除', ban: '已封号' }[row.resolution] }} · {{ row.handledBy }}<br>{{ row.note }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="rp.total" :page-size="20" :current-page="rp.page" @current-change="(p) => loadReports((p - 1) * 20)"></el-pagination></div>
+        </div>
+
+        <!-- 内容管理 -->
+        <div v-if="page === 'content'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="ct.type" @change="loadContent(0)">
+              <el-radio-button value="posts">帖子</el-radio-button>
+              <el-radio-button value="orders">订单</el-radio-button>
+              <el-radio-button value="comments">评论</el-radio-button>
+              <el-radio-button value="moments">动态</el-radio-button>
+            </el-radio-group>
+            <el-input id="ct-kw" v-model="ct.keyword" placeholder="搜索标题或内容" clearable style="width:220px" @keyup.enter="loadContent(0)" @clear="loadContent(0)"></el-input>
+            <el-select v-model="ct.filter" style="width:120px" @change="loadContent(0)">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="已隐藏" value="hidden"></el-option>
+              <el-option label="已置顶" value="pinned" v-if="ct.type !== 'comments'"></el-option>
+            </el-select>
+<el-select v-model="ct.schoolId" filterable remote clearable :remote-method="searchSchools" :loading="schLoading" placeholder="全部学校" style="width:180px" @change="loadContent(0)" @visible-change="(v) => v && searchSchools('')"><el-option v-for="o in schoolOpts" :key="o.id" :label="o.name" :value="o.id"></el-option></el-select>
+            <el-button @click="loadContent(0)">搜索</el-button>
+            <span v-if="ct.userId" class="muted">只看用户 {{ ct.userId }} <el-button link type="primary" @click="ct.userId=''; loadContent(0)">清除</el-button></span>
+          </div>
+          <el-table :data="ct.list" v-loading="loading" empty-text="没有内容">
+            <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="分类/学校" width="150" v-if="ct.type !== 'comments'"><template #default="{ row }">{{ funcNames[row.functionId] || row.functionId }}<div class="muted">{{ row.schoolName }}</div></template></el-table-column>
+            <el-table-column label="内容" min-width="300">
+              <template #default="{ row }">
+                <b v-if="row.title">{{ row.title }}</b>
+                <div class="snap">{{ row.content }}</div>
+                <div class="thumbs" v-if="row.images.length"><a v-for="u in row.images" :key="u" :href="u" target="_blank" rel="noopener"><img :src="thumb(u)" alt=""></a></div>
+              </template>
+            </el-table-column>
+            <el-table-column label="发布人" width="130"><template #default="{ row }"><a href="#" @click.prevent="openUser(row.user._id)">{{ row.user.nickname || row.user._id }}</a><div class="muted">{{ row.user.uid }}</div></template></el-table-column>
+            <el-table-column label="状态" width="110"><template #default="{ row }"><el-tag v-if="row.hidden" type="info">已隐藏</el-tag><el-tag v-if="row.pinned" type="warning">置顶</el-tag><span v-if="!row.hidden && !row.pinned" class="muted">正常</span></template></el-table-column>
+            <el-table-column label="操作" width="220" fixed="right">
+              <template #default="{ row }">
+                <el-button size="small" @click="setContent(row, row.hidden ? 'unhide' : 'hide')">{{ row.hidden ? '取消隐藏' : '隐藏' }}</el-button>
+                <el-button size="small" v-if="ct.type !== 'comments'" @click="setContent(row, row.pinned ? 'unpin' : 'pin')">{{ row.pinned ? '取消置顶' : '置顶' }}</el-button>
+                <el-button size="small" type="danger" plain @click="setContent(row, 'delete')">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="ct.total" :page-size="20" :current-page="ct.page" @current-change="(p) => loadContent((p - 1) * 20)"></el-pagination></div>
+        </div>
+
+        <!-- 用户管理 -->
+        <div v-if="page === 'users'" class="panel">
+          <div class="toolbar">
+            <el-input id="us-kw" v-model="us.keyword" placeholder="昵称 / 用户 ID / 登录账号" clearable style="width:240px" @keyup.enter="loadUsers(0)" @clear="loadUsers(0)"></el-input>
+            <el-select v-model="us.filter" style="width:120px" @change="loadUsers(0)"><el-option label="全部用户" value=""></el-option><el-option label="封禁中" value="banned"></el-option></el-select>
+<el-select v-model="us.schoolId" filterable remote clearable :remote-method="searchSchools" :loading="schLoading" placeholder="全部学校" style="width:180px" @change="loadUsers(0)" @visible-change="(v) => v && searchSchools('')"><el-option v-for="o in schoolOpts" :key="o.id" :label="o.name" :value="o.id"></el-option></el-select>
+            <el-button @click="loadUsers(0)">搜索</el-button>
+          </div>
+          <el-table :data="us.list" v-loading="loading" empty-text="没有用户">
+            <el-table-column label="用户" min-width="180"><template #default="{ row }"><a href="#" @click.prevent="openUser(row._id)">{{ row.nickname || '(未设置昵称)' }}</a><div class="muted">ID {{ row.uid }} · {{ row.platform }}<span v-if="row.username"> · 账号 {{ row.username }}</span></div></template></el-table-column>
+            <el-table-column label="学校" min-width="140"><template #default="{ row }">{{ row.schoolName || row.schoolId || '-' }}</template></el-table-column>
+            <el-table-column label="发布" width="70" prop="publishCount"></el-table-column>
+            <el-table-column label="注册时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="状态" width="170"><template #default="{ row }"><el-tag v-if="row.deleted" type="info">已注销</el-tag><el-tag v-else-if="row.bannedUntil > Date.now()" type="danger">封禁至 {{ banUntil(row.bannedUntil) }}</el-tag><span v-else class="muted">正常</span></template></el-table-column>
+            <el-table-column label="操作" width="200" fixed="right">
+              <template #default="{ row }">
+                <el-button size="small" @click="ct.userId = row._id; ct.type = 'posts'; go('content')">看内容</el-button>
+                <el-button size="small" v-if="row.bannedUntil > Date.now()" @click="unban(row._id)">解封</el-button>
+                <el-button size="small" type="danger" v-else @click="openBan(row._id)">封号</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="us.total" :page-size="20" :current-page="us.page" @current-change="(p) => loadUsers((p - 1) * 20)"></el-pagination></div>
+        </div>
+
+        <!-- 意见反馈 -->
+        <div v-if="page === 'riders'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="rd.status" @change="loadRiders(0)"><el-radio-button value="pending">待审核</el-radio-button><el-radio-button value="approved">已通过</el-radio-button><el-radio-button value="revoked">已取消</el-radio-button><el-radio-button value="all">全部</el-radio-button></el-radio-group>
+          </div>
+          <el-table :data="rd.list" v-loading="loading" empty-text="没有申请">
+            <el-table-column label="申请时间" width="150"><template #default="{ row }">{{ fmt(row.rider.appliedAt) }}</template></el-table-column>
+            <el-table-column label="用户" width="170"><template #default="{ row }"><a href="#" @click.prevent="openUser(row._id)">{{ row.nickname }}</a><div class="muted">{{ row.uid }} · {{ row.schoolName }}</div></template></el-table-column>
+            <el-table-column label="联系方式 / 说明" min-width="240"><template #default="{ row }"><b>{{ row.rider.contact }}</b><div class="muted">{{ row.rider.reason }}</div><div class="muted" v-if="row.rider.note">备注:{{ row.rider.note }}</div></template></el-table-column>
+            <el-table-column label="信用分 / 完成" width="120"><template #default="{ row }">{{ row.rider.score == null ? 100 : row.rider.score }} / {{ row.doneCount }}</template></el-table-column>
+            <el-table-column label="操作" width="200" fixed="right"><template #default="{ row }">
+              <el-button size="small" type="primary" v-if="row.rider.status !== 'approved'" @click="setRider(row, 'approved')">通过</el-button>
+              <el-button size="small" v-if="row.rider.status === 'pending'" @click="setRider(row, 'rejected')">驳回</el-button>
+              <el-button size="small" type="danger" plain v-if="row.rider.status === 'approved'" @click="setRider(row, 'revoked')">取消资格</el-button>
+            </template></el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="rd.total" :page-size="20" :current-page="rd.page" @current-change="(p) => loadRiders((p - 1) * 20)"></el-pagination></div>
+        </div>
+        <div v-if="page === 'schoolChanges'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="scq.status" @change="loadSchoolChanges(0)"><el-radio-button value="pending">待审核</el-radio-button><el-radio-button value="approved">已通过</el-radio-button><el-radio-button value="rejected">已驳回</el-radio-button><el-radio-button value="all">全部</el-radio-button></el-radio-group>
+          </div>
+          <p class="hint">用户 7 天内换学校超过 2 次时需要审核。学校管理员能看到「从本校转出」或「转入本校」的申请。</p>
+          <el-table :data="scq.list" v-loading="loading" empty-text="没有申请">
+            <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="用户" width="170"><template #default="{ row }"><a href="#" @click.prevent="openUser(row.userId)">{{ row.user.nickname || row.userId }}</a><div class="muted">{{ row.user.uid }}</div></template></el-table-column>
+            <el-table-column label="换校" min-width="260"><template #default="{ row }">{{ row.fromName }} → <b>{{ row.toName }}</b><div class="muted" v-if="row.reason">理由:{{ row.reason }}</div><div class="muted" v-if="row.note">备注:{{ row.note }}</div></template></el-table-column>
+            <el-table-column label="状态" width="90"><template #default="{ row }">{{ { pending: '待审核', approved: '已通过', rejected: '已驳回', cancelled: '已撤销' }[row.status] }}</template></el-table-column>
+            <el-table-column label="操作" width="170" fixed="right"><template #default="{ row }">
+              <template v-if="row.status === 'pending'"><el-button size="small" type="primary" @click="handleSchoolChange(row, 'approve')">通过</el-button><el-button size="small" @click="handleSchoolChange(row, 'reject')">驳回</el-button></template>
+            </template></el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="scq.total" :page-size="20" :current-page="scq.page" @current-change="(p) => loadSchoolChanges((p - 1) * 20)"></el-pagination></div>
+        </div>
+        <div v-if="page === 'deals'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="dl.status" @change="loadDeals"><el-radio-button value="active">进行中</el-radio-button><el-radio-button value="ended">已结束</el-radio-button><el-radio-button value="all">全部</el-radio-button></el-radio-group>
+            <el-button type="primary" @click="editDeal(null)">新增折扣</el-button>
+          </div>
+          <p class="hint">折扣只能由后台发布。用户在 App 里点「出示使用」会生成核销码并计数,「近 7 天使用」可以拿去和商家谈续约。</p>
+          <el-table :data="dl.list" v-loading="loading" empty-text="还没有折扣">
+            <el-table-column label="封面" width="110"><template #default="{ row }"><img v-if="row.cover" class="banner-img" :src="row.cover" alt=""><span v-else class="muted">无</span></template></el-table-column>
+            <el-table-column label="折扣" min-width="220"><template #default="{ row }"><b>{{ row.title }}</b><div>{{ row.merchant }} · <span style="color:#d63a73">{{ row.discount }}</span></div><div class="muted">{{ row.address }}</div></template></el-table-column>
+            <el-table-column label="范围" width="160"><template #default="{ row }">{{ row.schoolNames.length ? row.schoolNames.join('、') : ({ kr: '韩国全部', cn: '中国全部' }[row.country] || '全部') }}</template></el-table-column>
+            <el-table-column label="时间" width="170"><template #default="{ row }"><div>{{ row.startAt ? fmt(row.startAt) : '立即' }}</div><div :class="row.expired ? 'muted' : ''">至 {{ fmt(row.endAt) }}</div></template></el-table-column>
+            <el-table-column label="浏览 / 使用 / 近7天" width="140"><template #default="{ row }">{{ row.viewCount || 0 }} / {{ row.useCount || 0 }} / {{ row.week }}</template></el-table-column>
+            <el-table-column label="状态" width="80"><template #default="{ row }"><el-tag :type="row.status === 'active' && !row.expired ? 'success' : 'info'">{{ row.status === 'active' && !row.expired ? '进行中' : '已结束' }}</el-tag></template></el-table-column>
+            <el-table-column label="操作" width="200" fixed="right"><template #default="{ row }">
+              <el-button size="small" @click="editDeal(row)">编辑</el-button>
+              <el-button size="small" v-if="row.status === 'active'" @click="setDealStatus(row, 'ended')">结束</el-button>
+              <el-button size="small" type="danger" plain @click="setDealStatus(row, 'deleted')">删除</el-button>
+            </template></el-table-column>
+          </el-table>
+        </div>
+        <div v-if="page === 'merchants'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="ms.status" @change="loadMerchants(0)"><el-radio-button value="open">待跟进</el-radio-button><el-radio-button value="done">已处理</el-radio-button><el-radio-button value="all">全部</el-radio-button></el-radio-group>
+          </div>
+          <p class="hint">用户在「专属折扣」里推荐的商家。「被推荐次数」越多,说明越多同学想要这家的折扣。</p>
+          <el-table :data="ms.list" v-loading="loading" empty-text="还没有推荐">
+            <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="商家" min-width="220"><template #default="{ row }"><b>{{ row.name }}</b> <el-tag size="small" type="warning" v-if="row.times > 1">被推荐 {{ row.times }} 次</el-tag><div class="muted">{{ row.address }}</div><div>{{ row.note }}</div><div class="muted" v-if="row.handledNote">备注:{{ row.handledNote }}</div></template></el-table-column>
+            <el-table-column label="推荐人" width="170"><template #default="{ row }"><a href="#" @click.prevent="openUser(row.userId)">{{ row.user.nickname || row.userId }}</a><div class="muted">{{ row.schoolName }}</div></template></el-table-column>
+            <el-table-column label="操作" width="110" fixed="right"><template #default="{ row }"><el-button size="small" v-if="row.status !== 'done'" @click="doneMerchant(row)">已跟进</el-button></template></el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="ms.total" :page-size="20" :current-page="ms.page" @current-change="(p) => loadMerchants((p - 1) * 20)"></el-pagination></div>
+        </div>
+        <div v-if="page === 'feedback'" class="panel">
+          <div class="toolbar">
+            <el-radio-group v-model="fb.status" @change="loadFeedback(0)"><el-radio-button value="open">未处理</el-radio-button><el-radio-button value="done">已处理</el-radio-button><el-radio-button value="all">全部</el-radio-button></el-radio-group>
+          </div>
+          <el-table :data="fb.list" v-loading="loading" empty-text="没有反馈">
+            <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+            <el-table-column label="用户" width="140"><template #default="{ row }"><a href="#" @click.prevent="openUser(row.userId)">{{ row.user.nickname || row.userId }}</a></template></el-table-column>
+            <el-table-column label="内容" min-width="320"><template #default="{ row }"><div class="snap">{{ row.content }}</div><div class="thumbs" v-if="row.images && row.images.length"><a v-for="u in row.images" :key="u" :href="u" target="_blank" rel="noopener"><img :src="thumb(u)" alt=""></a></div><div class="muted" v-if="row.note">备注:{{ row.note }}</div></template></el-table-column>
+            <el-table-column label="操作" width="140" fixed="right"><template #default="{ row }"><el-button size="small" v-if="row.status !== 'done'" type="primary" @click="doneFeedback(row)">标记已处理</el-button><span v-else class="muted">已处理 · {{ row.handledBy }}</span></template></el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="fb.total" :page-size="20" :current-page="fb.page" @current-change="(p) => loadFeedback((p - 1) * 20)"></el-pagination></div>
+        </div>
+
+        <!-- 学校申请 -->
+        <template v-if="page === 'schools'">
+          <div class="panel" style="margin-bottom:16px">
+            <div class="toolbar">
+              <el-radio-group v-model="sc.status" @change="loadSchools"><el-radio-button value="">待审核</el-radio-button><el-radio-button value="approved">已通过</el-radio-button><el-radio-button value="rejected">已拒绝</el-radio-button></el-radio-group>
+              <el-button @click="openApprove(null)">手动添加学校</el-button>
+            </div>
+            <el-table :data="sc.list" v-loading="loading" empty-text="没有申请">
+              <el-table-column label="时间" width="150"><template #default="{ row }">{{ fmt(row.createdAt) }}</template></el-table-column>
+              <el-table-column label="国家" width="80"><template #default="{ row }">{{ { kr: '韩国', cn: '中国' }[row.country] || '-' }}</template></el-table-column>
+              <el-table-column label="申请的校名" prop="name" min-width="200"></el-table-column>
+              <el-table-column label="操作" width="200" fixed="right"><template #default="{ row }"><template v-if="!row.status"><el-button size="small" type="primary" @click="openApprove(row)">通过并添加</el-button><el-button size="small" @click="rejectSchool(row)">拒绝</el-button></template><span v-else class="muted">{{ row.status === 'approved' ? '已添加' : '已拒绝' }} · {{ row.handledBy }}</span></template></el-table-column>
+            </el-table>
+          </div>
+          <div class="panel">
+            <p class="ptitle">后台添加的学校(App 会在 1 小时内自动更新名单)</p>
+            <el-table :data="sc.custom" empty-text="还没有添加过">
+              <el-table-column label="国家" width="80"><template #default="{ row }">{{ { kr: '韩国', cn: '中国' }[row.country] }}</template></el-table-column>
+              <el-table-column label="中文名" prop="nameCn" min-width="160"></el-table-column>
+              <el-table-column label="英文名" prop="nameEn" min-width="160"></el-table-column>
+              <el-table-column label="地区" prop="region" width="140"></el-table-column>
+              <el-table-column label="类型" prop="type" width="90"></el-table-column>
+              <el-table-column label="操作" width="100"><template #default="{ row }"><el-button size="small" type="danger" plain @click="removeSchool(row)">移除</el-button></template></el-table-column>
+            </el-table>
+          </div>
+        </template>
+
+        <!-- 敏感词 -->
+        <div v-if="page === 'sensitive'" class="panel" style="max-width:760px">
+          <el-form label-position="top">
+            <el-form-item label="命中后怎么处理">
+              <el-radio-group v-model="sens.mode"><el-radio value="block">拦截,提示用户修改</el-radio><el-radio value="mask">替换成 ***,照常发布</el-radio></el-radio-group>
+            </el-form-item>
+            <el-form-item label="敏感词(每行一个,或用逗号分隔;不区分大小写)">
+              <el-input id="sens-words" v-model="sens.text" type="textarea" :rows="14" placeholder="例如:&#10;加微信代写&#10;刷单"></el-input>
+              <p class="hint">作用于:帖子标题和正文、订单的所有填写项、评论、私聊消息、昵称和签名。共 {{ sensCount }} 个词。</p>
+            </el-form-item>
+            <el-button type="primary" :loading="busy" @click="saveConfig('sensitive', { mode: sens.mode, words: sens.text })">保存</el-button>
+          </el-form>
+        </div>
+
+        <!-- 公告与横幅 -->
+        <div v-if="page === 'announcements'" class="panel">
+          <div class="toolbar"><el-button type="primary" @click="editAnn(null)">新增公告</el-button><span class="muted">显示在 App 主页顶部。有图片的显示成横幅,没有图片的显示成一行文字。</span></div>
+          <el-table :data="anns" empty-text="还没有公告">
+            <el-table-column label="图片" width="140"><template #default="{ row }"><img v-if="row.image" class="banner-img" :src="row.image" alt=""><span v-else class="muted">文字公告</span></template></el-table-column>
+            <el-table-column label="标题" min-width="200"><template #default="{ row }"><b>{{ row.title }}</b><div class="muted">{{ row.content }}</div></template></el-table-column>
+            <el-table-column label="范围" width="150"><template #default="{ row }">{{ { all: '全部国家', kr: '韩国', cn: '中国' }[row.country] }} · {{ { all: '全部语言', zh: '中文', en: '英文', ko: '韩语', vi: '越南语' }[row.lang] }}</template></el-table-column>
+            <el-table-column label="时间" width="180"><template #default="{ row }">{{ row.start || '立即' }} ~ {{ row.end || '长期' }}</template></el-table-column>
+            <el-table-column label="状态" width="80"><template #default="{ row }"><el-switch v-model="row.enabled" @change="saveAnns"></el-switch></template></el-table-column>
+            <el-table-column label="操作" width="150"><template #default="{ row, $index }"><el-button size="small" @click="editAnn($index)">编辑</el-button><el-button size="small" type="danger" plain @click="anns.splice($index, 1); saveAnns()">删除</el-button></template></el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 校园群 -->
+        <div v-if="page === 'groups'" class="panel">
+          <div class="toolbar"><el-button type="primary" @click="editGroup(null)">新增群</el-button><span class="muted">每个圈子(学校,以后的小区、村庄)单独配置一个群,只给这个圈子的用户看。没配置群的圈子,主页不显示进群入口。</span></div>
+          <el-table :data="groups" empty-text="还没有群">
+            <el-table-column label="二维码" width="90"><template #default="{ row }"><img v-if="row.qr" :src="row.qr" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px"><span v-else class="muted">仅链接</span></template></el-table-column>
+            <el-table-column label="群" min-width="200"><template #default="{ row }"><b>{{ row.name }}</b><div v-if="row.headline" style="color:#3e8e6b">📢 {{ row.headline }}</div> <el-tag size="small" v-if="row.platform">{{ row.platform }}</el-tag><div class="muted">{{ row.note }}</div><a v-if="row.link" :href="row.link" target="_blank" rel="noopener" class="muted">{{ row.link }}</a></template></el-table-column>
+            <el-table-column label="所属圈子" width="200"><template #default="{ row }"><el-tag :type="row.schoolId ? 'success' : 'danger'">{{ row.schoolId ? '🏫 ' + (row.schoolName || row.schoolId) : '未选择,不会显示' }}</el-tag></template></el-table-column>
+            <el-table-column label="显示" width="70"><template #default="{ row }"><el-switch v-model="row.enabled" @change="saveGroups"></el-switch></template></el-table-column>
+            <el-table-column label="操作" width="150"><template #default="{ row, $index }"><el-button size="small" @click="editGroup($index)">编辑</el-button><el-button size="small" type="danger" plain @click="groups.splice($index, 1); saveGroups()">删除</el-button></template></el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 工具箱 -->
+        <div v-if="page === 'tools'" class="panel">
+          <div class="toolbar"><el-button type="primary" @click="editTool(null)">新增工具</el-button><span class="muted">App 底部「工具」页。按分类分组,数字大的排前面。还没保存过时 App 显示默认清单(打开这页就能看到并修改)。</span></div>
+          <el-table :data="tools" empty-text="还没有工具">
+            <el-table-column label="图标" width="60"><template #default="{ row }"><span style="font-size:22px">{{ row.icon }}</span></template></el-table-column>
+            <el-table-column label="名称" min-width="180"><template #default="{ row }"><b>{{ row.name }}</b> <el-tag size="small" v-if="row.cat">{{ row.cat }}</el-tag><div class="muted">{{ row.desc }}</div></template></el-table-column>
+            <el-table-column label="链接" min-width="220"><template #default="{ row }"><a :href="row.url" target="_blank" rel="noopener">{{ row.url }}</a></template></el-table-column>
+            <el-table-column label="排序" width="70" prop="sort"></el-table-column>
+            <el-table-column label="显示" width="70"><template #default="{ row }"><el-switch v-model="row.enabled" @change="saveTools"></el-switch></template></el-table-column>
+            <el-table-column label="操作" width="150"><template #default="{ row, $index }"><el-button size="small" @click="editTool($index)">编辑</el-button><el-button size="small" type="danger" plain @click="tools.splice($index, 1); saveTools()">删除</el-button></template></el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 版本管理 -->
+        <div v-if="page === 'version'" class="panel" style="max-width:640px;margin-bottom:16px">
+          <p class="ptitle">下载二维码</p>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <img v-if="qr.png" :src="qr.png" alt="下载页二维码" style="width:180px;height:180px;border:1px solid var(--line);border-radius:8px">
+            <div style="flex:1;min-width:220px">
+              <p style="margin:0 0 6px">扫码进入下载页:<a :href="qr.url" target="_blank" rel="noopener">{{ qr.url }}</a></p>
+              <p class="hint">安卓手机显示「安卓下载」,iPhone 显示 App Store(没填链接时显示「即将上线」);在微信里扫码会提示「在浏览器中打开」。下载的是下面填的「下载链接」,发新版只要改链接,二维码不用换。</p>
+              <a v-if="qr.png" :href="qr.png" download="HelpMate-下载二维码.png" class="el-button el-button--primary el-button--small" style="margin-top:8px">保存二维码图片</a>
+            </div>
+          </div>
+        </div>
+        <div v-if="page === 'version'" class="panel" style="max-width:640px">
+          <el-form label-width="120px">
+            <el-form-item label="最新版本号"><el-input id="ver-name" v-model="ver.version" placeholder="例如 1.2.0"></el-input></el-form-item>
+            <el-form-item label="版本代码"><el-input-number v-model="ver.code" :min="0"></el-input-number><p class="hint" style="margin-left:10px">和 manifest.json 的 versionCode 一致,例如 1.2.0 → 120</p></el-form-item>
+            <el-form-item label="强制更新"><el-input-number v-model="ver.minCode" :min="0"></el-input-number><p class="hint" style="margin-left:10px">低于这个代码的版本必须更新;0 表示不强制</p></el-form-item>
+            <el-form-item label="下载链接"><el-input id="ver-url" v-model="ver.url" placeholder="https://helpmate.new-apis.com/uploads/app/helpmate-1.2.0.apk"></el-input></el-form-item>
+            <el-form-item label="App Store 链接"><el-input id="ver-ios" v-model="ver.iosUrl" placeholder="iOS 上架后填写,例如 https://apps.apple.com/app/id…"></el-input></el-form-item>
+            <el-form-item label="更新说明"><el-input id="ver-note" v-model="ver.note" type="textarea" :rows="4" placeholder="新增……&#10;修复……"></el-input></el-form-item>
+            <el-form-item><el-button type="primary" :loading="busy" @click="saveConfig('version', ver)">保存</el-button><span class="hint" style="margin-left:12px">版本代码填 0 时,沿用服务器 .env 里的配置</span></el-form-item>
+          </el-form>
+        </div>
+
+        <!-- 系统设置 -->
+        <div v-if="page === 'settings'" class="panel" style="max-width:640px">
+          <el-form label-width="190px">
+            <el-form-item label="每人每天翻译次数"><el-input-number v-model="st.translateDailyLimit" :min="0" :max="10000"></el-input-number></el-form-item>
+            <el-form-item label="闲置/租房等自动下架天数"><el-input-number v-model="st.listingTtlDays" :min="1" :max="365"></el-input-number></el-form-item>
+            <el-form-item label="游客最多浏览条数"><el-input-number v-model="st.guestMaxItems" :min="5" :max="500"></el-input-number></el-form-item>
+            <el-form-item label="私聊消息保留天数"><el-input-number v-model="st.msgRetentionDays" :min="7" :max="3650"></el-input-number></el-form-item>
+            <el-form-item><el-button type="primary" :loading="busy" @click="saveConfig('settings', st)">保存</el-button><span class="hint" style="margin-left:12px">保存后 1 分钟内生效</span></el-form-item>
+          </el-form>
+        </div>
+
+        <!-- 管理员 -->
+        <div v-if="page === 'admins'" class="panel">
+          <div class="toolbar"><el-button type="primary" @click="editAdmin(null)">新增管理员</el-button><span class="muted">学校管理员只能处理自己负责学校的举报、内容和用户;一所学校可以有多个管理员,一个管理员也可以负责多所学校。</span></div>
+          <el-table :data="adm.list" v-loading="loading">
+            <el-table-column label="用户名" width="150"><template #default="{ row }"><b>{{ row.username }}</b><div class="muted">{{ row.note }}</div></template></el-table-column>
+            <el-table-column label="角色" width="120"><template #default="{ row }"><el-tag :type="row.role === 'super' ? 'danger' : 'success'">{{ row.role === 'super' ? '超级管理员' : '学校管理员' }}</el-tag></template></el-table-column>
+            <el-table-column label="负责的学校" min-width="220"><template #default="{ row }"><span v-if="row.role === 'super'" class="muted">全部</span><el-tag v-for="sc in row.schools" :key="sc.id" size="small" style="margin:2px">{{ sc.name }}</el-tag></template></el-table-column>
+            <el-table-column label="上次登录" width="150"><template #default="{ row }">{{ fmt(row.lastLoginAt) }}</template></el-table-column>
+            <el-table-column label="状态" width="80"><template #default="{ row }"><el-tag v-if="row.disabled" type="info">已停用</el-tag><span v-else>正常</span></template></el-table-column>
+            <el-table-column label="操作" width="300" fixed="right">
+              <template #default="{ row }">
+                <el-button size="small" @click="editAdmin(row)">编辑</el-button>
+                <el-button size="small" @click="resetAdmin(row)">重置密码</el-button>
+                <el-button size="small" v-if="row.username !== me" @click="toggleAdmin(row)">{{ row.disabled ? '启用' : '停用' }}</el-button>
+                <el-button size="small" type="danger" plain v-if="row.username !== me" @click="deleteAdmin(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 操作日志 -->
+        <div v-if="page === 'logs'" class="panel">
+          <el-table :data="lg.list" v-loading="loading">
+            <el-table-column label="时间" width="170"><template #default="{ row }">{{ fmt(row.createdAt, true) }}</template></el-table-column>
+            <el-table-column label="管理员" prop="admin" width="110"></el-table-column>
+            <el-table-column label="操作" prop="action" width="160"></el-table-column>
+            <el-table-column label="对象" prop="target" min-width="180"></el-table-column>
+            <el-table-column label="说明" prop="detail" min-width="200"></el-table-column>
+          </el-table>
+          <div class="pager"><el-pagination layout="total, prev, pager, next" :total="lg.total" :page-size="50" @current-change="(p) => loadLogs((p - 1) * 50)"></el-pagination></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户详情 -->
+  <el-drawer v-model="ud.show" title="用户详情" size="480px">
+    <template v-if="ud.data">
+      <el-descriptions :column="1" border size="small">
+        <el-descriptions-item label="昵称">{{ ud.data.user.nickname }}</el-descriptions-item>
+        <el-descriptions-item label="用户 ID">{{ ud.data.user.uid }}</el-descriptions-item>
+        <el-descriptions-item label="登录账号">{{ ud.data.user.username || '(小程序用户)' }}</el-descriptions-item>
+        <el-descriptions-item label="学校">{{ ud.data.user.schoolId }}</el-descriptions-item>
+        <el-descriptions-item label="签名">{{ ud.data.user.signature }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ fmt(ud.data.user.createdAt, true) }}</el-descriptions-item>
+        <el-descriptions-item label="被举报 / 举报他人">{{ ud.data.reportsAgainst }} / {{ ud.data.reportsBy }}</el-descriptions-item>
+        <el-descriptions-item label="状态"><el-tag v-if="ud.data.user.bannedUntil > Date.now()" type="danger">封禁至 {{ banUntil(ud.data.user.bannedUntil) }} · {{ ud.data.user.banReason }}</el-tag><span v-else>正常</span></el-descriptions-item>
+      </el-descriptions>
+      <div style="margin:14px 0;display:flex;gap:8px">
+        <el-button v-if="ud.data.user.bannedUntil > Date.now()" @click="unban(ud.data.user._id)">解封</el-button>
+        <el-button v-else type="danger" @click="openBan(ud.data.user._id)">封号</el-button>
+        <el-button @click="ct.userId = ud.data.user._id; ct.type = 'posts'; ud.show = false; go('content')">管理 TA 的内容</el-button>
+      </div>
+      <p class="ptitle">最近帖子</p>
+      <div class="rank" v-for="p in ud.data.posts" :key="p._id"><span>{{ p.title }} <el-tag v-if="p.hidden" size="small" type="info">隐藏</el-tag></span><span class="muted">{{ fmt(p.createdAt) }}</span></div>
+      <p class="ptitle" style="margin-top:14px">最近订单</p>
+      <div class="rank" v-for="o in ud.data.orders" :key="o._id"><span>{{ funcNames[o.functionId] }} · {{ o.title }}</span><span class="muted">{{ fmt(o.createdAt) }}</span></div>
+      <p class="ptitle" style="margin-top:14px">最近评论</p>
+      <div class="rank" v-for="c in ud.data.comments" :key="c._id"><span>{{ c.content }}</span><span class="muted">{{ fmt(c.createdAt) }}</span></div>
+    </template>
+  </el-drawer>
+
+  <!-- 封号 -->
+  <el-dialog v-model="ban.show" title="封禁账号" width="420px">
+    <el-form label-position="top">
+      <el-form-item label="封禁时长"><el-radio-group v-model="ban.days"><el-radio-button :value="1">1 天</el-radio-button><el-radio-button :value="7">7 天</el-radio-button><el-radio-button :value="30">30 天</el-radio-button><el-radio-button :value="0" v-if="isSuper">永久</el-radio-button></el-radio-group></el-form-item>
+      <el-form-item label="原因(会记录在日志里)"><el-input id="ban-reason" v-model="ban.reason" placeholder="例如:发布诈骗信息"></el-input></el-form-item>
+      <el-checkbox v-model="ban.hideContent">同时隐藏 TA 发布的全部内容和评论</el-checkbox>
+      <p class="hint">封禁期间可以浏览,但不能发布、评论、私聊和修改资料。</p>
+    </el-form>
+    <template #footer><el-button @click="ban.show = false">取消</el-button><el-button type="danger" :loading="busy" @click="doBan">确认封禁</el-button></template>
+  </el-dialog>
+
+  <!-- 添加学校 -->
+  <el-dialog v-model="ap.show" title="添加学校" width="460px">
+    <el-form label-width="90px">
+      <el-form-item label="国家"><el-radio-group v-model="ap.country"><el-radio-button value="cn">中国</el-radio-button><el-radio-button value="kr">韩国</el-radio-button></el-radio-group></el-form-item>
+      <el-form-item label="中文校名"><el-input id="ap-cn" v-model="ap.nameCn"></el-input></el-form-item>
+      <el-form-item label="英文校名"><el-input id="ap-en" v-model="ap.nameEn" placeholder="可不填"></el-input></el-form-item>
+      <el-form-item label="韩文校名" v-if="ap.country === 'kr'"><el-input id="ap-kr" v-model="ap.nameKr"></el-input></el-form-item>
+      <el-form-item :label="ap.country === 'cn' ? '省份' : '地区'"><el-select v-model="ap.region" filterable style="width:100%"><el-option v-for="r in (ap.country === 'cn' ? sc.provinces : sc.krRegions)" :key="r" :label="r" :value="r"></el-option></el-select></el-form-item>
+      <el-form-item label="城市" v-if="ap.country === 'cn'"><el-input id="ap-city" v-model="ap.city" placeholder="可不填"></el-input></el-form-item>
+      <el-form-item label="类型"><el-select v-model="ap.type" style="width:100%"><el-option v-for="t in (ap.country === 'cn' ? ['本科', '专科'] : ['大学', '专门大学', '大学院', '教育大学', '神学大学', '科学技术院'])" :key="t" :label="t" :value="t"></el-option></el-select></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="ap.show = false">取消</el-button><el-button type="primary" :loading="busy" @click="approveSchool">添加</el-button></template>
+  </el-dialog>
+
+  <!-- 编辑管理员 -->
+  <el-dialog v-model="ae2.show" :title="ae2.isNew ? '新增管理员' : '编辑管理员'" width="480px">
+    <el-form label-width="90px">
+      <el-form-item label="用户名"><el-input id="adm-user" v-model="ae2.username" :disabled="!ae2.isNew" placeholder="3~20 位字母、数字或下划线"></el-input></el-form-item>
+      <el-form-item label="备注"><el-input id="adm-note" v-model="ae2.note" placeholder="例如:信韩大学学生会 张同学" maxlength="40"></el-input></el-form-item>
+      <el-form-item label="角色"><el-radio-group v-model="ae2.role"><el-radio-button value="school">学校管理员</el-radio-button><el-radio-button value="super">超级管理员</el-radio-button></el-radio-group></el-form-item>
+      <el-form-item label="学校范围" v-if="ae2.role === 'school'">
+        <el-radio-group v-model="schCountry" @change="searchSchools(schKw)"><el-radio-button value="">全部</el-radio-button><el-radio-button value="kr">韩国</el-radio-button><el-radio-button value="cn">中国</el-radio-button></el-radio-group>
+      </el-form-item>
+      <el-form-item label="负责学校" v-if="ae2.role === 'school'">
+        <el-select v-model="ae2.schools" multiple filterable remote :remote-method="searchSchools" :loading="schLoading" placeholder="输入校名搜索" style="width:100%" @visible-change="(v) => v && searchSchools('')">
+          <el-option v-for="o in schoolOptsWithSelected" :key="o.id" :label="o.name" :value="o.id"><span>{{ o.name }}</span><span class="muted" style="margin-left:10px;font-size:12px">{{ o.sub }}</span></el-option>
+        </el-select>
+        <p class="hint" style="margin:4px 0 0">可输入中文名、韩文名、英文名或拼音首字母搜索,例如「신한」「qhdx」「Yonsei」。不输入时先列出已有用户的学校。</p>
+      </el-form-item>
+      <p class="hint" v-if="ae2.role === 'super'">超级管理员可以管理全部学校、配置和其他管理员,请只给信任的人。</p>
+      <p class="hint" v-else>学校管理员能处理所负责学校的举报、内容和用户(封号最长 30 天),看不到其他学校,也不能改系统配置。</p>
+    </el-form>
+    <template #footer><el-button @click="ae2.show = false">取消</el-button><el-button type="primary" :loading="busy" @click="saveAdmin">{{ ae2.isNew ? '创建' : '保存' }}</el-button></template>
+  </el-dialog>
+
+  <el-dialog v-model="cred.show" title="账号已生成" width="440px" :close-on-click-modal="false">
+    <template v-if="cred.d">
+      <p style="margin-top:0">把下面的信息<b>私下</b>交给 {{ cred.d.username }}。密码只显示这一次,关掉后就看不到了。</p>
+      <el-descriptions :column="1" border size="small">
+        <el-descriptions-item label="后台地址">{{ adminUrl }}</el-descriptions-item>
+        <el-descriptions-item label="用户名">{{ cred.d.username }}</el-descriptions-item>
+        <el-descriptions-item label="密码"><b style="font-family:monospace;font-size:15px">{{ cred.d.password }}</b></el-descriptions-item>
+        <el-descriptions-item label="验证器密钥"><span style="font-family:monospace">{{ cred.d.secret }}</span></el-descriptions-item>
+      </el-descriptions>
+      <p class="hint">让对方用 Google Authenticator 或 Microsoft Authenticator 扫描下面的二维码(或手动输入密钥),登录时填 App 里的 6 位动态码。</p>
+      <div style="display:flex;justify-content:center;margin-top:8px" v-html="cred.d.qrSvg"></div>
+    </template>
+    <template #footer><el-button type="primary" @click="copyCred">复制账号信息</el-button><el-button @click="cred.show = false">我已保存</el-button></template>
+  </el-dialog>
+
+  <el-dialog v-model="pw.show" title="修改密码" width="400px">
+    <el-form label-position="top">
+      <el-form-item label="原密码"><el-input id="pw-old" v-model="pw.oldPassword" type="password" show-password></el-input></el-form-item>
+      <el-form-item label="新密码(至少 10 位)"><el-input id="pw-new" v-model="pw.newPassword" type="password" show-password></el-input></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="pw.show = false">取消</el-button><el-button type="primary" :loading="busy" @click="changePassword">保存</el-button></template>
+  </el-dialog>
+
+  <!-- 编辑校园群 -->
+  <el-dialog v-model="ge.show" title="校园群" width="520px">
+    <el-form label-width="80px">
+      <el-form-item label="群名称"><el-input id="ge-name" v-model="ge.d.name" maxlength="30" placeholder="如:新韩大学中国留学生群"></el-input></el-form-item>
+      <el-form-item label="轮播通告"><el-input id="ge-headline" v-model="ge.d.headline" maxlength="30" show-word-limit placeholder="主页轮播显示的一句话,如:新生群开放中,速进!不填显示「加入 + 群名」"></el-input></el-form-item>
+      <el-form-item label="平台"><el-select v-model="ge.d.platform" allow-create filterable placeholder="选择或输入"><el-option v-for="x in ['微信', 'QQ', 'KakaoTalk', 'LINE', 'Telegram', 'Discord']" :key="x" :label="x" :value="x"></el-option></el-select></el-form-item>
+      <el-form-item label="二维码">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <img v-if="ge.d.qr" :src="ge.d.qr" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:6px">
+          <label class="el-button el-button--small" style="cursor:pointer">上传二维码<input type="file" accept="image/*" style="display:none" @change="uploadGroupQr"></label>
+          <el-button size="small" v-if="ge.d.qr" @click="ge.d.qr = ''">去掉</el-button>
+        </div>
+        <p class="hint">微信群二维码 7 天过期,记得定期换;也可以放群主个人二维码</p>
+      </el-form-item>
+      <el-form-item label="入群链接"><el-input id="ge-link" v-model="ge.d.link" placeholder="KakaoTalk 开放聊天 / QQ 群链接等,可不填"></el-input></el-form-item>
+      <el-form-item label="说明"><el-input id="ge-note" v-model="ge.d.note" maxlength="100" placeholder="如:进群请备注 学校+专业"></el-input></el-form-item>
+      <el-form-item label="所属圈子" required>
+        <el-select v-model="ge.d.schoolId" filterable remote :remote-method="searchSchools" :loading="schLoading" placeholder="输入学校名搜索(以后支持小区、村庄)" style="width:100%" @visible-change="(v) => v && searchSchools('')" @change="(id) => (ge.d.schoolName = ((schoolOpts.find((o) => o.id === id) || {}).name || ''))">
+          <el-option v-for="o in groupSchoolOpts" :key="o.id" :label="o.name" :value="o.id"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="排序"><el-input-number v-model="ge.d.sort"></el-input-number></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="ge.show = false">取消</el-button><el-button type="primary" @click="saveGroup">确定</el-button></template>
+  </el-dialog>
+
+  <!-- 编辑工具 -->
+  <el-dialog v-model="te.show" title="工具" width="480px">
+    <el-form label-width="70px">
+      <el-form-item label="名称"><el-input id="te-name" v-model="te.d.name" maxlength="20"></el-input></el-form-item>
+      <el-form-item label="链接"><el-input id="te-url" v-model="te.d.url" placeholder="https://"></el-input></el-form-item>
+      <el-form-item label="一句话"><el-input id="te-desc" v-model="te.d.desc" maxlength="40" placeholder="这个工具能干什么"></el-input></el-form-item>
+      <el-form-item label="分类"><el-input id="te-cat" v-model="te.d.cat" maxlength="10" placeholder="如:翻译 / 出行 / 办事 / 学习"></el-input></el-form-item>
+      <el-form-item label="图标"><el-input id="te-icon" v-model="te.d.icon" maxlength="4" placeholder="一个 emoji,如 🔧" style="width:120px"></el-input></el-form-item>
+      <el-form-item label="语言"><el-select v-model="te.d.lang"><el-option label="全部语言" value="all"></el-option><el-option label="中文" value="zh"></el-option><el-option label="英文" value="en"></el-option><el-option label="韩语" value="ko"></el-option><el-option label="越南语" value="vi"></el-option></el-select></el-form-item>
+      <el-form-item label="排序"><el-input-number v-model="te.d.sort"></el-input-number></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="te.show = false">取消</el-button><el-button type="primary" @click="saveTool">确定</el-button></template>
+  </el-dialog>
+
+  <!-- 编辑折扣 -->
+  <el-dialog v-model="de.show" :title="de.d._id ? '编辑折扣' : '新增折扣'" width="560px">
+    <el-form label-width="90px">
+      <el-form-item label="标题"><el-input id="de-title" v-model="de.d.title" maxlength="30" show-word-limit placeholder="如:HelpMate 同学专享"></el-input></el-form-item>
+      <el-form-item label="商家"><el-input id="de-merchant" v-model="de.d.merchant" maxlength="30"></el-input></el-form-item>
+      <el-form-item label="折扣"><el-input id="de-discount" v-model="de.d.discount" maxlength="20" placeholder="如:全场 9 折 / 满 2 万减 3 千"></el-input></el-form-item>
+      <el-form-item label="使用说明"><el-input id="de-desc" v-model="de.d.desc" type="textarea" :rows="4" maxlength="800" placeholder="怎么用、限制条件、不能和其他优惠同用等"></el-input></el-form-item>
+      <el-form-item label="地址"><el-input id="de-addr" v-model="de.d.address" maxlength="80"></el-input></el-form-item>
+      <el-form-item label="电话"><el-input id="de-phone" v-model="de.d.phone" maxlength="30"></el-input></el-form-item>
+      <el-form-item label="封面图">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <img v-if="de.d.cover" class="banner-img" :src="de.d.cover" alt="">
+          <label class="el-button el-button--small" style="cursor:pointer">上传图片<input type="file" accept="image/*" style="display:none" @change="uploadDealImg"></label>
+          <el-button size="small" v-if="de.d.cover" @click="de.d.cover = ''">去掉</el-button>
+        </div>
+      </el-form-item>
+      <el-form-item label="国家"><el-radio-group v-model="de.d.country"><el-radio-button value="">全部</el-radio-button><el-radio-button value="kr">韩国</el-radio-button><el-radio-button value="cn">中国</el-radio-button></el-radio-group></el-form-item>
+      <el-form-item label="限定学校">
+        <el-select v-model="de.d.schoolIds" multiple filterable remote :remote-method="searchSchools" :loading="schLoading" placeholder="不选 = 该国家全部学校" style="width:100%" @visible-change="(v) => v && searchSchools('')">
+          <el-option v-for="o in dealSchoolOpts" :key="o.id" :label="o.name" :value="o.id"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="时间"><el-date-picker v-model="de.range" type="datetimerange" start-placeholder="开始(可空=立即)" end-placeholder="结束(必填)" style="width:100%"></el-date-picker></el-form-item>
+      <el-form-item label="每人每天"><el-input-number v-model="de.d.perDay" :min="0" :max="99"></el-input-number><span class="hint" style="margin-left:10px">次,0 = 不限</span></el-form-item>
+      <el-form-item label="排序"><el-input-number v-model="de.d.sort"></el-input-number><span class="hint" style="margin-left:10px">数字大的排前面</span></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="de.show = false">取消</el-button><el-button type="primary" :loading="busy" @click="saveDeal">保存</el-button></template>
+  </el-dialog>
+
+  <!-- 编辑公告 -->
+  <el-dialog v-model="ae.show" title="公告" width="520px">
+    <el-form label-width="80px">
+      <el-form-item label="标题"><el-input id="ae-title" v-model="ae.d.title" maxlength="40" show-word-limit></el-input></el-form-item>
+      <el-form-item label="内容"><el-input id="ae-content" v-model="ae.d.content" type="textarea" :rows="4" maxlength="500" placeholder="点开公告时显示"></el-input></el-form-item>
+      <el-form-item label="横幅图片">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <img v-if="ae.d.image" class="banner-img" :src="ae.d.image" alt="">
+          <label class="el-button el-button--small" style="cursor:pointer">上传图片<input type="file" accept="image/*" style="display:none" @change="uploadImg"></label>
+          <el-button size="small" v-if="ae.d.image" @click="ae.d.image = ''">去掉图片</el-button>
+        </div>
+        <p class="hint">建议宽高比 3:1,例如 1200 × 400</p>
+      </el-form-item>
+      <el-form-item label="跳转链接"><el-input id="ae-link" v-model="ae.d.link" placeholder="https://… 可不填"></el-input></el-form-item>
+      <el-form-item label="国家"><el-radio-group v-model="ae.d.country"><el-radio-button value="all">全部</el-radio-button><el-radio-button value="kr">韩国</el-radio-button><el-radio-button value="cn">中国</el-radio-button></el-radio-group></el-form-item>
+      <el-form-item label="语言"><el-select v-model="ae.d.lang"><el-option label="全部语言" value="all"></el-option><el-option label="中文" value="zh"></el-option><el-option label="英文" value="en"></el-option><el-option label="韩语" value="ko"></el-option><el-option label="越南语" value="vi"></el-option></el-select></el-form-item>
+      <el-form-item label="时间"><el-date-picker v-model="ae.range" type="datetimerange" value-format="YYYY-MM-DDTHH:mm:ss" start-placeholder="开始(可空)" end-placeholder="结束(可空)" style="width:100%"></el-date-picker></el-form-item>
+      <el-form-item label="排序"><el-input-number v-model="ae.d.sort"></el-input-number><span class="hint" style="margin-left:10px">数字大的排前面</span></el-form-item>
+    </el-form>
+    <template #footer><el-button @click="ae.show = false">取消</el-button><el-button type="primary" @click="saveAnn">确定</el-button></template>
+  </el-dialog>
+</div>
+
+<script src="vendor/vue.global.prod.js"></script>
+<script src="vendor/element-plus.js"></script>
+<script src="vendor/element-plus-zh-cn.js"></script>
+<script>
+const { createApp, reactive, ref, computed } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+const BASE = location.pathname.replace(/\/[^/]*$/, ''); // /api/admin
+const TK = 'helpmate_admin_token';
+const store = { get: (k) => { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } }, set: (k, v) => { try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch (e) {} } };
+
+createApp({
+  setup() {
+    const token = ref(store.get(TK));
+    const me = ref(store.get(TK + '_user'));
+    const page = ref('dashboard');
+    const menuOpen = ref(false);
+    const busy = ref(false);
+    const loading = ref(false);
+    const lf = reactive({ username: '', password: '', code: '' });
+    const role = ref(store.get(TK + '_role') || 'super');
+    const isSuper = computed(() => role.value === 'super');
+    const mySchools = ref([]);
+    const schoolOpts = ref([]);
+    const schLoading = ref(false);
+    const adm = reactive({ list: [] });
+    const ae2 = reactive({ show: false, isNew: true, username: '', note: '', role: 'school', schools: [], disabled: false, picked: [] });
+    const cred = reactive({ show: false, d: null });
+    const pw = reactive({ show: false, oldPassword: '', newPassword: '' });
+    const adminUrl = location.origin + BASE + '/';
+    const schoolOptsWithSelected = computed(() => {
+      const map = {};
+      ae2.picked.concat(schoolOpts.value).forEach((o) => (map[o.id] = o));
+      return Object.values(map);
+    });
+    const titles = { admins: '管理员', dashboard: '数据看板', reports: '举报处理', content: '内容管理', users: '用户管理', riders: '接单员审核', schoolChanges: '换校审核', deals: '专属折扣', merchants: '商家推荐', tools: '工具箱', groups: '校园群', feedback: '意见反馈', schools: '学校申请', sensitive: '敏感词', announcements: '公告与横幅', version: '版本管理', settings: '系统设置', logs: '操作日志' };
+    const reasonLabels = { spam: '垃圾广告', scam: '诈骗', abuse: '辱骂骚扰', sexual: '色情低俗', illegal: '违法违规', privacy: '侵犯隐私', other: '其他' };
+    const targetLabels = { post: '帖子', order: '订单', comment: '评论', user: '用户/私聊', message: '私聊消息', moment: '动态' };
+    const funcNames = { pickup: '帮取/送', delivery: '帮送', carpool: '拼车', groupbuy: '拆单凑单', rant: '吐槽避雷', help: '求助', warning: '避雷', qa: '互助问答', hangout: '攒局', secondhand: '闲置', friends: '交友扩列', housing: '租房', parttime: '兼职', companion: '陪玩陪练陪聊', food: '美食推荐', lostfound: '失物招领', treehole: '匿名树洞', confession: '情感树洞', freshman: '新生FAQ', game: '游戏专区', meal: '饭搭子', homecook: '私厨点菜' };
+
+    const totals = reactive({});
+    const series = reactive({ labels: [], users: [], posts: [], orders: [] });
+    const topSchools = ref([]);
+    const byCountry = ref([]);
+    const rp = reactive({ status: 'pending', schoolId: '', list: [], total: 0, page: 1 });
+    const ct = reactive({ type: 'posts', keyword: '', filter: '', userId: '', schoolId: '', list: [], total: 0, page: 1 });
+    const us = reactive({ keyword: '', filter: '', schoolId: '', list: [], total: 0, page: 1 });
+    const fb = reactive({ status: 'open', list: [], total: 0, page: 1 });
+    const rd = reactive({ status: 'pending', list: [], total: 0, page: 1 });
+    // 换校审核
+    const scq = reactive({ status: 'pending', list: [], total: 0, page: 1 });
+    const loadSchoolChanges = (skip) => wrap(async () => { const r = await api('listSchoolChanges', { status: scq.status, skip }); scq.list = r.list; scq.total = r.total; scq.page = skip / 20 + 1; });
+    async function handleSchoolChange(row, decision) {
+      let note = '';
+      if (decision === 'reject') { try { note = (await ElMessageBox.prompt('驳回理由(会通知用户)', '驳回换校申请', { inputValue: '' })).value || ''; } catch (e) { return; } }
+      else if (!(await confirm('同意把「' + (row.user.nickname || row.userId) + '」的学校改为「' + row.toName + '」?'))) return;
+      await api('handleSchoolChange', { id: row._id, decision, note }); ElMessage.success('已处理'); loadSchoolChanges((scq.page - 1) * 20);
+    }
+    // 专属折扣 / 商家推荐
+    const dl = reactive({ status: 'active', list: [] });
+    const ms = reactive({ status: 'open', list: [], total: 0, page: 1 });
+    const de = reactive({ show: false, d: {}, range: null, picked: [] });
+    const dealSchoolOpts = computed(() => { const map = {}; de.picked.concat(schoolOpts.value).forEach((o) => (map[o.id] = o)); return Object.values(map); });
+    const loadDeals = () => wrap(async () => { dl.list = (await api('listDeals', { status: dl.status })).list; });
+    const loadMerchants = (skip) => wrap(async () => { const r = await api('listMerchantSuggestions', { status: ms.status, skip }); ms.list = r.list; ms.total = r.total; ms.page = skip / 20 + 1; });
+    function editDeal(row) {
+      const d = row ? { _id: row._id, title: row.title, merchant: row.merchant, discount: row.discount, desc: row.desc, address: row.address, phone: row.phone, cover: row.cover, country: row.country || '', schoolIds: (row.schoolIds || []).slice(), perDay: row.perDay == null ? 1 : row.perDay, sort: row.sort || 0 } : { title: '', merchant: '', discount: '', desc: '', address: '', phone: '', cover: '', country: 'kr', schoolIds: [], perDay: 1, sort: 0 };
+      Object.assign(de, { show: true, d, range: row ? [row.startAt ? new Date(row.startAt) : null, row.endAt ? new Date(row.endAt) : null] : null, picked: row ? (row.schoolIds || []).map((id, i) => ({ id, name: row.schoolNames[i] || id })) : [] });
+    }
+    async function saveDeal() {
+      const end = de.range && de.range[1];
+      if (!end) return ElMessage.warning('请设置结束时间');
+      busy.value = true;
+      try {
+        await api('saveDeal', { d: { ...de.d, startAt: de.range[0] ? new Date(de.range[0]).getTime() : 0, endAt: new Date(end).getTime() } });
+        ElMessage.success('已保存,App 里马上可见'); de.show = false; loadDeals();
+      } catch (e) {} finally { busy.value = false; }
+    }
+    async function setDealStatus(row, status) {
+      if (!(await confirm((status === 'deleted' ? '删除' : '结束') + '「' + row.title + '」?'))) return;
+      await api('setDealStatus', { id: row._id, status }); loadDeals();
+    }
+    async function doneMerchant(row) {
+      let note = ''; try { note = (await ElMessageBox.prompt('跟进备注(可不填)', '标记已跟进', { inputValue: '' })).value || ''; } catch (e) { return; }
+      await api('setMerchantSuggestion', { id: row._id, status: 'done', note }); loadMerchants((ms.page - 1) * 20);
+    }
+    async function uploadDealImg(e) {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(BASE + '/upload', { method: 'POST', headers: { 'x-admin-token': token.value }, body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (j.success) de.d.cover = j.url; else ElMessage.error(j.message || '上传失败');
+    }
+    const loadRiders = (skip) => wrap(async () => { const r = await api('listRiders', { status: rd.status, skip }); rd.list = r.list; rd.total = r.total; rd.page = skip / 20 + 1; });
+    const setRider = async (row, status) => { let note = ''; if (status !== 'approved') { try { note = (await ElMessageBox.prompt('备注(会通知用户,可不填)', status === 'rejected' ? '驳回申请' : '取消接单资格', { inputValue: '' })).value || ''; } catch (e) { return; } } await api('setRider', { id: row._id, status, note }); ElMessage.success('已处理'); loadRiders((rd.page - 1) * 20); };
+    const sc = reactive({ status: '', list: [], custom: [], provinces: [], krRegions: [] });
+    const sens = reactive({ mode: 'block', text: '' });
+    const sensCount = computed(() => sens.text.split(/[\n,，]/).map((w) => w.trim()).filter(Boolean).length);
+    const anns = ref([]);
+    const ver = reactive({ version: '', code: 0, minCode: 0, url: '', iosUrl: '', note: '' });
+    const qr = reactive({ url: '', png: '' });
+    const st = reactive({ translateDailyLimit: 200, listingTtlDays: 30, guestMaxItems: 30, msgRetentionDays: 180 });
+    const lg = reactive({ list: [], total: 0 });
+    const ud = reactive({ show: false, data: null });
+    const ban = reactive({ show: false, id: '', report: null, days: 7, reason: '', hideContent: false });
+    const ap = reactive({ show: false, requestId: '', country: 'cn', nameCn: '', nameEn: '', nameKr: '', region: '', city: '', type: '本科' });
+    const ae = reactive({ show: false, index: -1, d: {}, range: null });
+    // 校园群
+    const groups = ref([]);
+    const ge = reactive({ show: false, index: -1, d: {} });
+    const groupSchoolOpts = computed(() => { const map = {}; (ge.d.schoolId ? [{ id: ge.d.schoolId, name: ge.d.schoolName || ge.d.schoolId }] : []).concat(schoolOpts.value).forEach((o) => (map[o.id] = o)); return Object.values(map); });
+    function editGroup(i) {
+      const d = i === null ? { name: '', platform: '微信', qr: '', link: '', note: '', country: 'kr', schoolId: '', schoolName: '', sort: 0, enabled: true } : { ...groups.value[i] };
+      Object.assign(ge, { show: true, index: i === null ? -1 : i, d });
+    }
+    async function saveGroup() {
+      if (!ge.d.name || (!ge.d.qr && !ge.d.link)) return ElMessage.warning('请填写群名称,并上传二维码或填写链接');
+      if (!ge.d.schoolId) return ElMessage.warning('请选择这个群属于哪个圈子(学校)');
+      // 防止加错群:保存前再确认一次
+      if (!(await confirm('「' + ge.d.name + '」只给「' + (ge.d.schoolName || ge.d.schoolId) + '」的用户看,确认二维码是这个圈子的群吗?'))) return;
+      ge.d.schoolId = ge.d.schoolId || '';
+      if (ge.index >= 0) groups.value.splice(ge.index, 1, ge.d); else groups.value.unshift(ge.d);
+      ge.show = false; saveGroups();
+    }
+    async function saveGroups() { const r = await api('setConfig', { key: 'groups', value: groups.value }); groups.value = r.value; ElMessage.success('已保存,App 1 分钟内更新'); }
+    async function uploadGroupQr(e) {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(BASE + '/upload', { method: 'POST', headers: { 'x-admin-token': token.value }, body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (j.success) ge.d.qr = j.url; else ElMessage.error(j.message || '上传失败');
+    }
+    // 工具箱
+    const tools = ref([]);
+    const te = reactive({ show: false, index: -1, d: {} });
+    function editTool(i) {
+      const d = i === null ? { name: '', url: 'https://', desc: '', cat: '', icon: '🔗', lang: 'all', sort: 0, enabled: true } : { ...tools.value[i] };
+      Object.assign(te, { show: true, index: i === null ? -1 : i, d });
+    }
+    function saveTool() {
+      if (!te.d.name || !/^https?:\/\//.test(te.d.url || '')) return ElMessage.warning('请填写名称和以 https:// 开头的链接');
+      if (te.index >= 0) tools.value.splice(te.index, 1, te.d); else tools.value.unshift(te.d);
+      te.show = false; saveTools();
+    }
+    async function saveTools() { const r = await api('setConfig', { key: 'tools', value: tools.value }); tools.value = r.value; ElMessage.success('已保存,App 1 分钟内更新'); }
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (ts, sec) => {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}` + (sec ? ':' + pad(d.getSeconds()) : '');
+    };
+    const banUntil = (ts) => (ts > 8e15 ? '永久' : fmt(ts));
+    const thumb = (u) => (/\.jpg$/.test(u) && u.indexOf('/uploads/') >= 0 && u.indexOf('/admin/') < 0 ? u.replace(/\.jpg$/, '_s.jpg') : u);
+    const barH = (v, arr) => Math.max(2, Math.round((v / Math.max(1, ...arr)) * 100)) + '%';
+
+    async function api(action, data) {
+      const r = await fetch(BASE + '/call', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-token': token.value }, body: JSON.stringify({ action, ...(data || {}) }) });
+      if (r.status === 401) { logout(); throw new Error('登录已过期'); }
+      const j = await r.json().catch(() => ({ success: false, message: '服务器返回异常' }));
+      if (!j.success) { ElMessage.error(j.message || '操作失败'); throw new Error(j.message); }
+      return j;
+    }
+    async function login() {
+      if (!lf.username || !lf.password || !lf.code) return ElMessage.warning('请把三项都填上');
+      busy.value = true;
+      try {
+        const r = await fetch(BASE + '/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lf) });
+        const j = await r.json();
+        if (!j.success) return ElMessage.error(j.message);
+        token.value = j.token; me.value = j.username; role.value = j.role || 'super';
+        store.set(TK, j.token); store.set(TK + '_user', j.username); store.set(TK + '_role', role.value);
+        lf.password = ''; lf.code = '';
+        await loadMe();
+        go('dashboard');
+      } catch (e) { ElMessage.error('网络错误'); } finally { busy.value = false; }
+    }
+    function logout() { token.value = ''; store.set(TK, ''); }
+
+    async function loadStats() {
+      const r = await api('stats');
+      Object.assign(totals, r.totals); Object.assign(series, r.series);
+      topSchools.value = r.topSchools; byCountry.value = r.byCountry;
+    }
+    const wrap = async (fn) => { loading.value = true; try { await fn(); } catch (e) {} finally { loading.value = false; } };
+    const loadReports = (skip) => wrap(async () => { const r = await api('listReports', { status: rp.status, schoolId: rp.schoolId, skip }); rp.list = r.list; rp.total = r.total; rp.page = skip / 20 + 1; });
+    const loadContent = (skip) => wrap(async () => { const r = await api('listContent', { type: ct.type, keyword: ct.keyword, filter: ct.filter, userId: ct.userId, schoolId: ct.schoolId, skip }); ct.list = r.list; ct.total = r.total; ct.page = skip / 20 + 1; });
+    const loadUsers = (skip) => wrap(async () => { const r = await api('listUsers', { keyword: us.keyword, filter: us.filter, schoolId: us.schoolId, skip }); us.list = r.list; us.total = r.total; us.page = skip / 20 + 1; });
+    const loadFeedback = (skip) => wrap(async () => { const r = await api('listFeedback', { status: fb.status, skip }); fb.list = r.list; fb.total = r.total; fb.page = skip / 20 + 1; });
+    const loadSchools = () => wrap(async () => { const r = await api('listSchoolRequests', { status: sc.status }); Object.assign(sc, { list: r.list, custom: r.custom, provinces: r.provinces, krRegions: r.krRegions }); });
+    const loadLogs = (skip) => wrap(async () => { const r = await api('listLogs', { skip }); lg.list = r.list; lg.total = r.total; });
+    async function loadConfig(key) { return (await api('getConfig', { key })).value; }
+
+    async function loadMe() {
+      try {
+        const r = await api('me');
+        role.value = r.role; mySchools.value = r.schools || []; store.set(TK + '_role', r.role);
+      } catch (e) {}
+    }
+    const schCountry = ref('');
+    const schKw = ref('');
+    async function searchSchools(q) {
+      schKw.value = q || '';
+      schLoading.value = true;
+      try { schoolOpts.value = (await api('searchSchools', { keyword: schKw.value, country: schCountry.value })).list; } catch (e) {} finally { schLoading.value = false; }
+    }
+    const loadAdmins = () => wrap(async () => { adm.list = (await api('listAdmins')).list; });
+    function editAdmin(row) {
+      if (!row) Object.assign(ae2, { show: true, isNew: true, username: '', note: '', role: 'school', schools: [], disabled: false, picked: [] });
+      else Object.assign(ae2, { show: true, isNew: false, username: row.username, note: row.note, role: row.role, schools: row.schools.map((x) => x.id), disabled: row.disabled, picked: row.schools });
+    }
+    async function saveAdmin() {
+      busy.value = true;
+      try {
+        const r = await api('saveAdmin', { isNew: ae2.isNew, username: ae2.username, note: ae2.note, role: ae2.role, schools: ae2.schools, disabled: ae2.disabled });
+        ae2.show = false; loadAdmins();
+        if (r.credentials) Object.assign(cred, { show: true, d: r.credentials }); else ElMessage.success('已保存');
+      } catch (e) {} finally { busy.value = false; }
+    }
+    async function resetAdmin(row) {
+      if (!(await confirm('重置 ' + row.username + ' 的密码和验证器?旧密码和旧验证器会立即失效。'))) return;
+      const r = await api('resetAdmin', { username: row.username }); Object.assign(cred, { show: true, d: r.credentials });
+    }
+    async function toggleAdmin(row) {
+      await api('saveAdmin', { isNew: false, username: row.username, note: row.note, role: row.role, schools: row.schools.map((x) => x.id), disabled: !row.disabled });
+      ElMessage.success(row.disabled ? '已启用' : '已停用,对方会被立即踢下线'); loadAdmins();
+    }
+    async function deleteAdmin(row) { if (!(await confirm('删除管理员 ' + row.username + '?'))) return; await api('deleteAdmin', { username: row.username }); loadAdmins(); }
+    function copyCred() {
+      const d = cred.d;
+      const text = `HelpMate 管理后台\n地址:${adminUrl}\n用户名:${d.username}\n密码:${d.password}\n验证器密钥:${d.secret}`;
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => ElMessage.success('已复制'), () => ElMessage.warning('复制失败,请手动选择文字复制'));
+    }
+    async function changePassword() {
+      busy.value = true;
+      try { await api('changePassword', { oldPassword: pw.oldPassword, newPassword: pw.newPassword }); ElMessage.success('已修改,请用新密码重新登录'); pw.show = false; logout(); } catch (e) {} finally { busy.value = false; }
+    }
+
+    async function go(p) {
+      page.value = p; menuOpen.value = false;
+      try {
+        if (p === 'admins') loadAdmins();
+        loadStats().catch(() => {});
+        if (p === 'reports') loadReports(0);
+        if (p === 'content') loadContent(0);
+        if (p === 'users') loadUsers(0);
+        if (p === 'feedback') loadFeedback(0);
+        if (p === 'riders') loadRiders(0);
+        if (p === 'deals') loadDeals();
+        if (p === 'schoolChanges') loadSchoolChanges(0);
+        if (p === 'merchants') loadMerchants(0);
+        if (p === 'schools') loadSchools();
+        if (p === 'logs') loadLogs(0);
+        if (p === 'sensitive') { const v = (await loadConfig('sensitive')) || {}; sens.mode = v.mode || 'block'; sens.text = (v.words || []).join('\n'); }
+        if (p === 'announcements') anns.value = (await loadConfig('announcements')) || [];
+        if (p === 'groups') groups.value = (await loadConfig('groups')) || [];
+        if (p === 'tools') { const v = await loadConfig('tools'); tools.value = v || (await api('defaultTools')).list; }
+        if (p === 'version') {
+          Object.assign(ver, { version: '', code: 0, minCode: 0, url: '', iosUrl: '', note: '' }, (await loadConfig('version')) || {});
+          api('downloadQr').then((r) => Object.assign(qr, r)).catch(() => {});
+        }
+        if (p === 'settings') Object.assign(st, (await loadConfig('settings')) || {});
+      } catch (e) {}
+    }
+    async function saveConfig(key, value) {
+      busy.value = true;
+      try { const r = await api('setConfig', { key, value }); ElMessage.success(r.note || '已保存'); } catch (e) {} finally { busy.value = false; }
+    }
+
+    async function confirm(msg) { try { await ElMessageBox.confirm(msg, '确认', { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }); return true; } catch (e) { return false; } }
+    async function resolve(row, action) {
+      const words = { dismiss: '驳回这条举报?', hide: '隐藏被举报的内容?(发布人自己还能看到)', delete: '删除被举报的内容?不可恢复' };
+      if (!(await confirm(words[action]))) return;
+      await api('resolveReport', { id: row._id, decision: action }); ElMessage.success('已处理'); loadReports((rp.page - 1) * 20);
+    }
+    async function setContent(row, op) {
+      if (op === 'delete' && !(await confirm('删除后不可恢复,帖子/订单下的评论也会一起删除。确定删除?'))) return;
+      await api('setContent', { type: ct.type, id: row._id, op }); ElMessage.success('已完成'); loadContent((ct.page - 1) * 20);
+    }
+    async function openUser(id) { if (!id) return; ud.data = null; ud.show = true; try { ud.data = await api('userDetail', { id }); } catch (e) { ud.show = false; } }
+    function openBan(id, report) { Object.assign(ban, { show: true, id, report: report || null, days: 7, reason: '', hideContent: false }); }
+    // 学校管理员:负责的学校作为默认下拉选项
+    async function doBan() {
+      busy.value = true;
+      try {
+        if (ban.report) await api('resolveReport', { id: ban.report._id, decision: 'ban', days: ban.days, note: ban.reason, hideContent: ban.hideContent });
+        else await api('banUser', { id: ban.id, days: ban.days, reason: ban.reason, hideContent: ban.hideContent });
+        ElMessage.success('已封禁'); ban.show = false;
+        if (page.value === 'reports') loadReports((rp.page - 1) * 20);
+        if (page.value === 'users') loadUsers((us.page - 1) * 20);
+        if (ud.show) openUser(ban.id);
+      } catch (e) {} finally { busy.value = false; }
+    }
+    async function unban(id) { await api('unbanUser', { id }); ElMessage.success('已解封'); if (page.value === 'users') loadUsers((us.page - 1) * 20); if (ud.show) openUser(id); }
+    async function doneFeedback(row) {
+      let note = '';
+      try { note = (await ElMessageBox.prompt('处理备注(可不填)', '标记已处理', { confirmButtonText: '确定', cancelButtonText: '取消', inputValue: '' })).value || ''; } catch (e) { return; }
+      await api('setFeedback', { id: row._id, status: 'done', note }); ElMessage.success('已标记'); loadFeedback((fb.page - 1) * 20);
+    }
+    function openApprove(row) {
+      Object.assign(ap, { show: true, requestId: row ? row._id : '', country: (row && row.country) || 'cn', nameCn: row ? row.name : '', nameEn: '', nameKr: '', region: '', city: '', type: (row && row.country === 'kr') ? '大学' : '本科' });
+    }
+    async function approveSchool() {
+      busy.value = true;
+      try { await api('approveSchool', { ...ap }); ElMessage.success('已添加,App 名单会自动更新'); ap.show = false; loadSchools(); } catch (e) {} finally { busy.value = false; }
+    }
+    async function rejectSchool(row) { if (!(await confirm('拒绝「' + row.name + '」的申请?'))) return; await api('rejectSchool', { id: row._id }); loadSchools(); }
+    async function removeSchool(row) { if (!(await confirm('从名单移除「' + row.nameCn + '」?已经选了这所学校的用户不受影响。'))) return; await api('removeCustomSchool', { id: row._id }); loadSchools(); }
+
+    function editAnn(i) {
+      const d = i === null ? { title: '', content: '', image: '', link: '', country: 'all', lang: 'all', sort: 0, enabled: true, start: '', end: '' } : { ...anns.value[i] };
+      Object.assign(ae, { show: true, index: i === null ? -1 : i, d, range: d.start || d.end ? [d.start || null, d.end || null] : null });
+    }
+    function saveAnn() {
+      if (!ae.d.title && !ae.d.image) return ElMessage.warning('请填写标题或上传图片');
+      ae.d.start = (ae.range && ae.range[0]) || ''; ae.d.end = (ae.range && ae.range[1]) || '';
+      if (ae.index >= 0) anns.value.splice(ae.index, 1, ae.d); else anns.value.unshift(ae.d);
+      ae.show = false; saveAnns();
+    }
+    async function saveAnns() { const r = await api('setConfig', { key: 'announcements', value: anns.value }); anns.value = r.value; ElMessage.success('已保存,App 1 分钟内更新'); }
+    async function uploadImg(e) {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(BASE + '/upload', { method: 'POST', headers: { 'x-admin-token': token.value }, body: fd });
+      const j = await r.json().catch(() => ({}));
+      if (j.success) ae.d.image = j.url; else ElMessage.error(j.message || '上传失败');
+    }
+
+    if (token.value) loadMe().then(() => go('dashboard'));
+    return { qr, schCountry, schKw, role, isSuper, mySchools, schoolOpts, schoolOptsWithSelected, schLoading, adm, ae2, cred, pw, adminUrl, searchSchools, editAdmin, saveAdmin, resetAdmin, toggleAdmin, deleteAdmin, copyCred, changePassword,
+      token, me, page, menuOpen, busy, loading, lf, titles, reasonLabels, targetLabels, funcNames, totals, series, topSchools, byCountry, rp, ct, us, fb, sc, sens, sensCount, anns, ver, st, lg, ud, ban, ap, ae,
+      fmt, banUntil, thumb, barH, login, logout, go, saveConfig, loadReports, loadContent, loadUsers, loadFeedback, rd, loadRiders, setRider, loadSchools, loadLogs, resolve, setContent, openUser, openBan, doBan, unban, doneFeedback, openApprove, approveSchool, rejectSchool, removeSchool, editAnn, saveAnn, saveAnns, uploadImg,
+      scq, loadSchoolChanges, handleSchoolChange, groups, ge, groupSchoolOpts, editGroup, saveGroup, saveGroups, uploadGroupQr, tools, te, editTool, saveTool, saveTools, dl, ms, de, dealSchoolOpts, loadDeals, loadMerchants, editDeal, saveDeal, setDealStatus, doneMerchant, uploadDealImg };
+  },
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+</body>
+</html>

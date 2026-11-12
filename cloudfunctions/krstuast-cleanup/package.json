@@ -1,0 +1,9 @@
+{
+  "name": "krstuast-cleanup",
+  "version": "1.0.0",
+  "description": "一次性清理云函数：上线前清空开发环境业务数据，用完即删",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}
